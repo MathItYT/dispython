@@ -1,127 +1,111 @@
 import discord
-import os
-import aiofiles
-import aiofiles.os
-import asyncio
-from multiprocessing import Pool
-from typing import Union
+from discord.ext import commands
 from dotenv import load_dotenv
+import shutil
+import os
+import uuid
+import functools
+import subprocess
+import sys
 
 
 load_dotenv()
-token = os.environ.get("BOT_TOKEN")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 
-@asyncio.coroutine
-async def aiolistdir(path):
-    return os.listdir(path)
+bot = commands.Bot("!", intents=discord.Intents.all())
 
 
-class DisPython(discord.Client):
-    async def on_ready(self):
-        print(f'Logged on as {self.user}!')
-    async def on_message(self, message: discord.Message):
-        content = message.content
-        if not (content.startswith("```py") and content.endswith("```")):
-            return
-        channel = message.channel
-        content = content.removeprefix("```py")
-        content = content.removesuffix("```")
-        async with aiofiles.open("file.py", "w", encoding="utf-8") as f:
-            await f.write(content)
-        if self.is_manim(content):
-            await self.run_manim(channel)
-        elif self.is_manimgl(content):
-            await self.run_manimgl(channel)
-        elif self.is_matplotlib(content):
-            await self.run_matplotlib(channel)
+async def run_blocking(blocking_func, *args, **kwargs):
+    """Runs a blocking function in a non-blocking way"""
+    func = functools.partial(blocking_func, *args, **kwargs) # `run_in_executor` doesn't support kwargs, `functools.partial` does
+    return await bot.loop.run_in_executor(None, func)
+
+
+@bot.event
+async def on_ready():
+    print("Bot is ready")
+
+
+@bot.command()
+async def python(ctx: commands.Context):
+    if ctx.message.reference is None:
+        await ctx.send("You must reply to a Python code block!")
+        return
+    channel = bot.get_channel(ctx.message.reference.channel_id)
+    msg = await channel.fetch_message(ctx.message.reference.message_id)
+    txt = msg.content
+    if not txt.startswith("```py") or not txt.endswith("```"):
+        await ctx.send("The message you're replying to must be a Python code block!")
+        return
+    txt = txt.removeprefix("```py").removesuffix("```")
+    filename = str(uuid.uuid4()) + ".py"
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(txt)
+    bot_msg = None
+    p = subprocess.Popen(["python", filename], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    for line in iter(p.stdout.readline, b""):
+        if bot_msg is None:
+            bot_msg = await channel.send(line.decode(errors="replace"))
         else:
-            await self.run_python(channel)
-        await aiofiles.os.remove("file.py")
-    
-    def is_manim(self, message: str):
-        return "from manim import *" in message
-    
-    async def run_manim(self, channel: Union[
-        discord.TextChannel,
-        discord.VoiceChannel,
-        discord.StageChannel,
-        discord.Thread,
-        discord.DMChannel,
-        discord.PartialMessageable,
-        discord.GroupChannel
-    ]):
-        await self.run_cmd("timeout 2m manim file.py Main --media_dir . --output_file file.mp4", channel)
-        if await aiofiles.os.path.exists("file.mp4"):
-            await channel.send("Here is your Manim scene!", file=discord.File("file.mp4"))
-            await aiofiles.os.remove("file.mp4")
-    
-    def is_manimgl(self, message: str):
-        return "from manimlib import *" in message
-    
-    async def run_manimgl(self, channel: Union[
-        discord.TextChannel,
-        discord.VoiceChannel,
-        discord.StageChannel,
-        discord.Thread,
-        discord.DMChannel,
-        discord.PartialMessageable,
-        discord.GroupChannel
-    ]):
-        await self.run_cmd("timeout 2m manimgl file.py Main --video_dir . --file_name file.mp4", channel)
-        if await aiofiles.os.path.exists("file.mp4"):
-            await channel.send("Here is your ManimGL scene!", file=discord.File("file.mp4"))
-            await aiofiles.os.remove("file.mp4")
-    
-    def is_matplotlib(self, message):
-        return "import matplotlib.pyplot as plt" in message
-    
-    async def run_matplotlib(self, channel: Union[
-        discord.TextChannel,
-        discord.VoiceChannel,
-        discord.StageChannel,
-        discord.Thread,
-        discord.DMChannel,
-        discord.PartialMessageable,
-        discord.GroupChannel
-    ]):
-        await self.run_python(channel)
-        for file in await aiolistdir(os.getcwd()):
-            if not file.endswith(".py"):
-                await channel.send("Here is your Pyplot graph!", file=discord.File(file))
-                await aiofiles.os.remove(file)
-    
-    async def run_python(self, channel: Union[
-        discord.TextChannel,
-        discord.VoiceChannel,
-        discord.StageChannel,
-        discord.Thread,
-        discord.DMChannel,
-        discord.PartialMessageable,
-        discord.GroupChannel
-    ]):
-        await self.run_cmd("timeout 2m python file.py", channel)
-
-    async def run_cmd(self, cmd, channel: Union[
-        discord.TextChannel,
-        discord.VoiceChannel,
-        discord.StageChannel,
-        discord.Thread,
-        discord.DMChannel,
-        discord.PartialMessageable,
-        discord.GroupChannel
-    ]):
-        proc = await asyncio.create_subprocess_shell(
-            cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE)
-
-        stdout, stderr = await proc.communicate()
-
-        await channel.send(f'[{cmd!r} exited with {proc.returncode}]')
-        if stdout:
-            await channel.send(f'{stdout.decode()}')
+            bot_msg = await bot_msg.edit(content=bot_msg.content + "\n" + line.decode(errors="replace"))
+    os.remove(filename)
 
 
-client = DisPython(intents=discord.Intents.all())
-client.run(token)
+@bot.command()
+async def manim(ctx: commands.Context, arg1, arg2):
+    if ctx.message.reference is None:
+        await ctx.send("You must reply to a Python code block!")
+        return
+    channel = bot.get_channel(ctx.message.reference.channel_id)
+    msg = await channel.fetch_message(ctx.message.reference.message_id)
+    txt = msg.content
+    if not txt.startswith("```py") or not txt.endswith("```"):
+        await ctx.send("The message you're replying to must be a Python code block!")
+        return
+    txt = txt.removeprefix("```py").removesuffix("```")
+    filename = str(uuid.uuid4()) + ".py"
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(txt)
+    process = subprocess.Popen(["manim", filename, arg1, "-o", arg2], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    for line in iter(process.stdout.readline, b''):
+        pass
+    media_file = os.path.join("media", "videos", filename.removesuffix(".py"), "1080p60", arg2)
+    if not os.path.exists(media_file):
+        media_file = os.path.join("media", "images", filename.removesuffix(".py"), arg2)
+    if os.path.exists(media_file):
+        await ctx.send("Here is your Manim media file!", file=discord.File(media_file))
+    else:
+        await ctx.send("There was an error, please check your code!")
+    os.remove(filename)
+    shutil.rmtree("media")
+    shutil.rmtree("__pycache__")
+
+
+@bot.command()
+async def matplotlib(ctx: commands.Context, arg):
+    if ctx.message.reference is None:
+        await ctx.send("You must reply to a Python code block!")
+        return
+    channel = bot.get_channel(ctx.message.reference.channel_id)
+    msg = await channel.fetch_message(ctx.message.reference.message_id)
+    txt = msg.content
+    if not txt.startswith("```py") or not txt.endswith("```"):
+        await ctx.send("The message you're replying to must be a Python code block!")
+        return
+    txt = txt.removeprefix("```py").removesuffix("```")
+    filename = str(uuid.uuid4()) + ".py"
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(txt)
+    bot_msg = None
+    p = subprocess.Popen(["python", filename], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    for line in iter(p.stdout.readline, b""):
+        pass
+    if not os.path.exists(arg):
+        await channel.send("There's not any file with that name!")
+    else:
+        await channel.send("Here is your Matplotlib figure!", file=discord.File(arg))
+    os.remove(filename)
+
+
+bot.run(BOT_TOKEN)

@@ -1,0 +1,3 @@
+directories:
+  output: media
+  temporary_storage: media/temp

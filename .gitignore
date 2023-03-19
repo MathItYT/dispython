@@ -1,2 +1,4 @@
-.env
-file.py
+*
+!bot.py
+!requirements.txt
+!custom_config.yml
