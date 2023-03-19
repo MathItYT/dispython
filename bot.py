@@ -69,9 +69,9 @@ async def manim(ctx: commands.Context, arg1, arg2):
     process = subprocess.Popen(["timeout", "120", "manim", filename, arg1, "-o", arg2], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     for line in iter(process.stdout.readline, b''):
         pass
-    media_file = os.path.join("media", "videos", filename.removesuffix(".py"), "1080p60", arg2)
+    media_file = os.path.join("media", "videos", filename[:-3], "1080p60", arg2)
     if not os.path.exists(media_file):
-        media_file = os.path.join("media", "images", filename.removesuffix(".py"), arg2)
+        media_file = os.path.join("media", "images", filename[:-3], arg2)
     if os.path.exists(media_file):
         await ctx.send("Here is your Manim media file!", file=discord.File(media_file))
     else:
