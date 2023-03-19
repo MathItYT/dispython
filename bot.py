@@ -42,7 +42,7 @@ async def python(ctx: commands.Context):
     with open(filename, "w", encoding="utf-8") as f:
         f.write(txt)
     bot_msg = None
-    p = subprocess.Popen(["python", filename], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    p = subprocess.Popen(["timeout", "120", "python", filename], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     for line in iter(p.stdout.readline, b""):
         if bot_msg is None:
             bot_msg = await channel.send(line.decode(errors="replace"))
@@ -66,7 +66,7 @@ async def manim(ctx: commands.Context, arg1, arg2):
     filename = str(uuid.uuid4()) + ".py"
     with open(filename, "w", encoding="utf-8") as f:
         f.write(txt)
-    process = subprocess.Popen(["manim", filename, arg1, "-o", arg2], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    process = subprocess.Popen(["timeout", "120", "manim", filename, arg1, "-o", arg2], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     for line in iter(process.stdout.readline, b''):
         pass
     media_file = os.path.join("media", "videos", filename.removesuffix(".py"), "1080p60", arg2)
@@ -97,7 +97,7 @@ async def matplotlib(ctx: commands.Context, arg):
     with open(filename, "w", encoding="utf-8") as f:
         f.write(txt)
     bot_msg = None
-    p = subprocess.Popen(["python", filename], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    p = subprocess.Popen(["timeout", "120", "python", filename], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     for line in iter(p.stdout.readline, b""):
         pass
     if not os.path.exists(arg):
