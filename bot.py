@@ -37,7 +37,7 @@ async def python(ctx: commands.Context):
     if not txt.startswith("```py") or not txt.endswith("```"):
         await ctx.send("The message you're replying to must be a Python code block!")
         return
-    txt = txt.removeprefix("```py").removesuffix("```")
+    txt = txt[5:][:-3]
     filename = str(uuid.uuid4()) + ".py"
     with open(filename, "w", encoding="utf-8") as f:
         f.write(txt)
@@ -62,7 +62,7 @@ async def manim(ctx: commands.Context, arg1, arg2):
     if not txt.startswith("```py") or not txt.endswith("```"):
         await ctx.send("The message you're replying to must be a Python code block!")
         return
-    txt = txt.removeprefix("```py").removesuffix("```")
+    txt = txt[5:][:-3]
     filename = str(uuid.uuid4()) + ".py"
     with open(filename, "w", encoding="utf-8") as f:
         f.write(txt)
@@ -92,7 +92,7 @@ async def matplotlib(ctx: commands.Context, arg):
     if not txt.startswith("```py") or not txt.endswith("```"):
         await ctx.send("The message you're replying to must be a Python code block!")
         return
-    txt = txt.removeprefix("```py").removesuffix("```")
+    txt = txt[5:][:-3]
     filename = str(uuid.uuid4()) + ".py"
     with open(filename, "w", encoding="utf-8") as f:
         f.write(txt)
