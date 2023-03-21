@@ -6,7 +6,6 @@ import os
 import uuid
 import functools
 import subprocess
-import asyncio
 
 
 load_dotenv()
