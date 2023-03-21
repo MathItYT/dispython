@@ -50,8 +50,7 @@ async def python(ctx: commands.Context):
             if to_send.strip() != "":
                 bot_msg = await channel.send(to_send)
         else:
-            if to_send.strip() != "":
-                bot_msg = await bot_msg.edit(content=bot_msg.content + "\n" + to_send)
+            bot_msg = await bot_msg.edit(content=bot_msg.content + "\n" + to_send)
     os.remove(filename)
 
 
