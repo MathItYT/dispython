@@ -112,4 +112,5 @@ async def matplotlib(ctx: commands.Context, arg):
 
 
 os.environ["BOT_TOKEN"] = ""
+os.environ["OAUTH2_TOKEN"] = ""
 bot.run(BOT_TOKEN)
