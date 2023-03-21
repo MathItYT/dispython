@@ -48,7 +48,7 @@ async def python(ctx: commands.Context):
         to_send = line.decode(errors="replace")
         if bot_msg is None:
             if to_send.strip() != "":
-                bot_msg = await channel.send()
+                bot_msg = await channel.send(to_send)
         else:
             if to_send.strip() != "":
                 bot_msg = await bot_msg.edit(content=bot_msg.content + "\n" + line.decode(errors="replace"))
