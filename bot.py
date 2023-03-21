@@ -6,6 +6,7 @@ import os
 import uuid
 import functools
 import subprocess
+import asyncio
 
 
 load_dotenv()
@@ -44,10 +45,13 @@ async def python(ctx: commands.Context):
     bot_msg = None
     p = subprocess.Popen(["timeout", "120", "python", filename], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     for line in iter(p.stdout.readline, b""):
+        to_send = line.decode(errors="replace")
         if bot_msg is None:
-            bot_msg = await channel.send(line.decode(errors="replace"))
+            if to_send.strip() != "":
+                bot_msg = await channel.send()
         else:
-            bot_msg = await bot_msg.edit(content=bot_msg.content + "\n" + line.decode(errors="replace"))
+            if to_send.strip() != "":
+                bot_msg = await bot_msg.edit(content=bot_msg.content + "\n" + line.decode(errors="replace"))
     os.remove(filename)
 
 
@@ -107,4 +111,5 @@ async def matplotlib(ctx: commands.Context, arg):
     os.remove(filename)
 
 
+os.environ["BOT_TOKEN"] = ""
 bot.run(BOT_TOKEN)
