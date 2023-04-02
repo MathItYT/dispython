@@ -48,11 +48,12 @@ async def python(ctx: commands.Context):
     previous_line = None
     p = subprocess.Popen(["timeout", "120", "python", filename], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     for line in iter(p.stdout.readline, b""):
-        if line not in ("\n", "") and bot_msg is None:
-            bot_msg = await channel.send(line)
-            previous_line = line
+        if line.decode() not in ("\n", "") and bot_msg is None:
+            bot_msg = await channel.send(line.decode())
+            previous_line = deepcopy(line.decode())
         elif line not in ("\n", "") and bot_msg is not None:
-            bot_msg = await bot_msg.edit(content=previous_line + line)
+            bot_msg = await bot_msg.edit(content=previous_line + line.decode())
+            previous_line = deepcopy(previous_line + line.decode())
     os.remove(filename)
 
 
