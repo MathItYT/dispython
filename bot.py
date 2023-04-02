@@ -5,7 +5,11 @@ import os
 import uuid
 import functools
 import subprocess
+from dotenv import load_dotenv
 from copy import deepcopy
+
+
+load_dotenv()
 
 
 DISCORD_TOKEN = deepcopy(os.getenv("BOT_TOKEN"))
