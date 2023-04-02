@@ -43,7 +43,7 @@ async def python(ctx: commands.Context):
     txt = txt[5:][:-3]
     bot_msg = None
     previous_line = None
-    p = subprocess.Popen(["timeout", "120", "python", "-c", f'"{txt}"'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    p = subprocess.Popen(["timeout", "120", "python", "-c", txt], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     for line in iter(p.stdout.readline, b""):
         if line.decode() not in ("\n", "") and bot_msg is None:
             bot_msg = await channel.send(line.decode())
