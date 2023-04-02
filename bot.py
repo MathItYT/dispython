@@ -8,7 +8,7 @@ import subprocess
 from copy import deepcopy
 
 
-BOT_TOKEN = deepcopy(os.getenv("BOT_TOKEN"))
+DISCORD_TOKEN = deepcopy(os.getenv("BOT_TOKEN"))
 
 
 bot = commands.Bot("!", intents=discord.Intents.all())
@@ -113,4 +113,4 @@ os.environ["OAUTH2_TOKEN"] = ""
 with open(".env", "w") as f:
     f.write("Access denied!")
 
-bot.run(BOT_TOKEN)
+bot.run(DISCORD_TOKEN)
