@@ -47,7 +47,7 @@ async def python(ctx: commands.Context):
     bot_msg = None
     previous_line = None
     p = subprocess.Popen(["timeout", "120", "python", filename], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    for line in iter(p.stdout.readline(), b""):
+    for line in iter(p.stdout.readline, b""):
         if line not in ("\n", "") and bot_msg is None:
             bot_msg = await channel.send(line)
             previous_line = line
