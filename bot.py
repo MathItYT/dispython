@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from dotenv import load_dotenv
 import shutil
 import os
 import uuid
@@ -8,7 +7,6 @@ import functools
 import subprocess
 
 
-load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 
@@ -43,13 +41,12 @@ async def python(ctx: commands.Context):
         f.write(txt)
     bot_msg = None
     p = subprocess.Popen(["timeout", "120", "python", filename], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    for line in iter(p.stdout.readline, b""):
-        to_send = line.decode(errors="replace")
-        if bot_msg is None:
-            if to_send.strip() != "":
-                bot_msg = await channel.send(to_send)
-        else:
-            bot_msg = await bot_msg.edit(content=bot_msg.content + "\n" + to_send)
+    while p.poll() is None:
+        lines = "".join([line.decode() for line in p.stdout])
+        if lines != "" and bot_msg is None:
+            bot_msg = await channel.send(lines)
+        elif lines != "" and bot_msg is not None:
+            bot_msg = await bot_msg.edit(content=lines)
     os.remove(filename)
 
 
@@ -98,7 +95,6 @@ async def matplotlib(ctx: commands.Context, arg):
     filename = str(uuid.uuid4()) + ".py"
     with open(filename, "w", encoding="utf-8") as f:
         f.write(txt)
-    bot_msg = None
     p = subprocess.Popen(["timeout", "120", "python", filename], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     for line in iter(p.stdout.readline, b""):
         pass
@@ -107,6 +103,7 @@ async def matplotlib(ctx: commands.Context, arg):
     else:
         await channel.send("Here is your Matplotlib figure!", file=discord.File(arg))
     os.remove(filename)
+    os.remove(arg)
 
 
 os.environ["BOT_TOKEN"] = ""
