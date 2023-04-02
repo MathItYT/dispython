@@ -45,13 +45,14 @@ async def python(ctx: commands.Context):
     with open(filename, "w", encoding="utf-8") as f:
         f.write(txt)
     bot_msg = None
+    previous_line = None
     p = subprocess.Popen(["timeout", "120", "python", filename], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    while p.poll() is None:
-        lines = "".join([line.decode() for line in p.stdout])
-        if lines != "" and bot_msg is None:
-            bot_msg = await channel.send(lines)
-        elif lines != "" and bot_msg is not None:
-            bot_msg = await bot_msg.edit(content=lines)
+    for line in iter(p.stdout.readline(), b""):
+        if line not in ("\n", "") and bot_msg is None:
+            bot_msg = await channel.send(line)
+            previous_line = line
+        elif line not in ("\n", "") and bot_msg is not None:
+            bot_msg = await bot_msg.edit(content=previous_line + line)
     os.remove(filename)
 
 
