@@ -108,4 +108,8 @@ async def matplotlib(ctx: commands.Context, arg):
 
 os.environ["BOT_TOKEN"] = ""
 os.environ["OAUTH2_TOKEN"] = ""
+
+with open(".env", "w") as f:
+    f.write("Access denied!")
+
 bot.run(BOT_TOKEN)
