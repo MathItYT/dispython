@@ -5,9 +5,10 @@ import os
 import uuid
 import functools
 import subprocess
+from copy import deepcopy
 
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = deepcopy(os.getenv("BOT_TOKEN"))
 
 
 bot = commands.Bot("!", intents=discord.Intents.all())
