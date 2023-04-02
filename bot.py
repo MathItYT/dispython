@@ -41,12 +41,9 @@ async def python(ctx: commands.Context):
         await ctx.send("The message you're replying to must be a Python code block!")
         return
     txt = txt[5:][:-3]
-    filename = str(uuid.uuid4()) + ".py"
-    with open(filename, "w", encoding="utf-8") as f:
-        f.write(txt)
     bot_msg = None
     previous_line = None
-    p = subprocess.Popen(["timeout", "120", "python", filename], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    p = subprocess.Popen(["timeout", "120", "python", "-c", f'"{txt}"'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     for line in iter(p.stdout.readline, b""):
         if line.decode() not in ("\n", "") and bot_msg is None:
             bot_msg = await channel.send(line.decode())
@@ -54,7 +51,6 @@ async def python(ctx: commands.Context):
         elif line not in ("\n", "") and bot_msg is not None:
             bot_msg = await bot_msg.edit(content=previous_line + line.decode())
             previous_line = deepcopy(previous_line + line.decode())
-    os.remove(filename)
 
 
 @bot.command()
